@@ -1,6 +1,6 @@
 import pytest
 
-from simple_soccer_py.models import Vector2D
+from simple_soccer_py.common.vector2d import Vector2D
 
 
 class TestVector2D:
