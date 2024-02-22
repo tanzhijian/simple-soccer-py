@@ -89,18 +89,107 @@ class BaseGameEntity:
 
 
 class MovingEntity(BaseGameEntity):
-    def __init__(self, id: int) -> None:
+    def __init__(
+        self,
+        id: int,
+        position: Vector2D,
+        radius: float,
+        velocity: Vector2D,
+        max_speed: float,
+        heading: Vector2D,
+        mass: float,
+        scale: Vector2D,
+        turn_rate: float,
+        max_force: float,
+    ) -> None:
         super().__init__(id)
-        self.velocity = Vector2D()
+        self._velocity = velocity
         # a normalized vector pointing in the direction the entity is heading.
-        self.heading = Vector2D()
+        self._heading = heading
         # a vector perpendicular to the heading vector
-        self.side = Vector2D()
-        self.mass = Vector2D()
+        self._side = heading.perp()
+        self._mass = mass
         # the maximum speed this entity may travel at.
-        self.max_speed = 0.0
+        self._max_speed = max_speed
         # the maximum force this entity can produce to power itself
         # (think rockets and thrust)
-        self.max_force = 0.0
+        self._max_force = max_force
         # the maximum rate (radians per second)this vehicle can rotate
-        self.max_turn_rate = 0.0
+        self._max_turn_rate = turn_rate
+
+        self._position = position
+        self._bounding_radius = radius
+        self._scale = scale
+
+    @property
+    def velocity(self) -> Vector2D:
+        return self._velocity
+
+    @velocity.setter
+    def velocity(self, new_vel: Vector2D) -> None:
+        self._velocity = new_vel
+
+    @property
+    def mass(self) -> float:
+        return self._mass
+
+    @property
+    def side(self) -> Vector2D:
+        return self._side
+
+    @property
+    def max_speed(self) -> float:
+        return self._max_speed
+
+    @max_speed.setter
+    def max_speed(self, new_speed: float) -> None:
+        self._max_speed = new_speed
+
+    @property
+    def max_force(self) -> float:
+        return self._max_force
+
+    @max_force.setter
+    def max_force(self, mf: float) -> None:
+        self._max_force = mf
+
+    @property
+    def is_speed_maxed_out(self) -> bool:
+        return self.max_speed * self.max_speed >= self.velocity.length_sq()
+
+    @property
+    def speed(self) -> float:
+        return self.velocity.length()
+
+    @property
+    def speed_sq(self) -> float:
+        return self.velocity.length_sq()
+
+    @property
+    def heading(self) -> Vector2D:
+        return self._heading
+
+    @heading.setter
+    def heading(self, new_heading: Vector2D) -> None:
+        assert (new_heading.length_sq() - 1.0) < 0.00001
+        self._heading = new_heading
+        # the side vector must always be perpendicular to the heading
+        self._side = self._heading.perp()
+
+    def rotate_heading_to_face_position(self, target: Vector2D) -> bool:
+        """
+        given a target position, this method rotates the entity's heading
+        and side vectors by an amount not greater than m_dMaxTurnRate
+        until it directly faces the target.
+
+        returns true when the heading is facing in the desired direction
+        """
+        ...
+
+    @property
+    def max_turn_rate(self) -> float:
+        return self._max_turn_rate
+
+    @max_turn_rate.setter
+    def max_turn_rate(self, val: float) -> None:
+        self._max_turn_rate = val
