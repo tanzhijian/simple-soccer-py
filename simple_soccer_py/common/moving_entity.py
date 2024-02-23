@@ -1,6 +1,9 @@
+import math
 from pathlib import Path
 
+from .c2d_matrix import C2DMatrix
 from .telegram import Telegram
+from .utils import clamp
 from .vector2d import Vector2D
 
 
@@ -19,7 +22,7 @@ class BaseGameEntity:
 
         # its location in the environment
         self._position = Vector2D()
-        self._scale = Vector2D()
+        self._scale = Vector2D(1, 1)
 
         self._bounding_radius = 0.0
 
@@ -137,6 +140,10 @@ class MovingEntity(BaseGameEntity):
     def side(self) -> Vector2D:
         return self._side
 
+    @side.setter
+    def side(self, new_side: Vector2D) -> None:
+        self._side = new_side
+
     @property
     def max_speed(self) -> float:
         return self._max_speed
@@ -184,7 +191,39 @@ class MovingEntity(BaseGameEntity):
 
         returns true when the heading is facing in the desired direction
         """
-        ...
+        to_target = target - self.position
+        to_target.normalize()
+        dot = self.heading.dot(to_target)
+
+        # some compilers lose acurracy
+        # so the value is clamped to ensure it remains valid for the acos
+        dot = clamp(dot, -1, 1)
+
+        # first determine the angle between the heading vector and the target
+        angle = math.acos(dot)
+
+        # return true if the player is facing the target
+        if angle < 0.00001:
+            return True
+
+        # clamp the amount to turn to the max turn rate
+        if angle > self.max_turn_rate:
+            angle = self.max_turn_rate
+
+        # The next few lines use a rotation matrix
+        # to rotate the player's heading vector accordingly
+        rotation_matrix = C2DMatrix()
+
+        # notice how the direction of rotation has to be determined
+        # when creating the rotation matrix
+        rotation_matrix.rotate_by_angle(angle * self.heading.sign(to_target))
+        rotation_matrix.transform_vector2ds(self.heading)
+        rotation_matrix.transform_vector2ds(self.velocity)
+
+        # finally recreate m_vSide
+        self.side = self.heading.perp()
+
+        return False
 
     @property
     def max_turn_rate(self) -> float:
