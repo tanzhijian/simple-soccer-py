@@ -1,3 +1,6 @@
+from common.vector2d import Vector2D
+
+
 class SoccerPitch:
     def __init__(self) -> None:
         self.ball = SoccerBall()
@@ -14,11 +17,11 @@ class SoccerPitch:
         self.game_on = False
         self.goalkeeper_has_ball = False
 
-        def update(self) -> None:
-            ...
+    def update(self) -> None:
+        ...
 
-        def render(self) -> None:
-            ...
+    def render(self) -> None:
+        ...
 
 
 class SoccerBall:
